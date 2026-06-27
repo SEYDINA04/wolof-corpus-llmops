@@ -1,5 +1,14 @@
 # 🌍 Wolof Corpus — LLMOps Pipeline
 
+[![CI](https://github.com/SEYDINA04/wolof-corpus-llmops/actions/workflows/ci.yml/badge.svg)](https://github.com/SEYDINA04/wolof-corpus-llmops/actions/workflows/ci.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![uv](https://img.shields.io/badge/managed%20with-uv-DE5FE9?logo=astral&logoColor=white)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/badge/lint-ruff-D7FF64?logo=ruff&logoColor=black)](https://github.com/astral-sh/ruff)
+[![Tests](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)](https://docs.pytest.org/)
+[![HF Dataset](https://img.shields.io/badge/🤗%20Dataset-galsenai%2Fwolof__centalized__corpus-FFD21E)](https://huggingface.co/datasets/galsenai/wolof_centalized_corpus)
+[![Examples](https://img.shields.io/badge/examples-606%2C456-success)](https://huggingface.co/datasets/galsenai/wolof_centalized_corpus)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Pipeline **LLMOps** de construction, validation et publication d'un corpus
 **wolof** centralisé pour l'entraînement de modèles de langue (LLM/ASR/MT).
 
@@ -153,7 +162,20 @@ wolof_scraper/
 
 ---
 
+## 👤 Auteur & affiliations
+
+**Babacar Ndao** — *Data & AI System Engineer*
+
+[![GitHub](https://img.shields.io/badge/GitHub-SEYDINA04-181717?logo=github&logoColor=white)](https://github.com/SEYDINA04)
+[![HuggingFace](https://img.shields.io/badge/🤗%20HuggingFace-SEYDINA04-FFD21E)](https://huggingface.co/SEYDINA04)
+
+Réalisé dans le cadre de **[GalsenAI](https://huggingface.co/galsenai)** —
+communauté sénégalaise dédiée à l'intelligence artificielle et aux langues
+locales (wolof).
+
+---
+
 ## 📄 Licence
 
-Code sous licence MIT. Le dataset publié est sous `cc-by-4.0` (voir la data card HF).
+Code sous licence [MIT](LICENSE). Le dataset publié est sous `cc-by-4.0` (voir la data card HF).
 Chaque source conserve sa licence d'origine — se référer aux datasets respectifs.
