@@ -10,7 +10,7 @@ RUN := cd src && $(PY) -m pipeline.run
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup lint test ingest centralize merge stats datacard validate \
+.PHONY: help setup hooks lint test ingest centralize merge stats datacard validate \
         publish all clean
 
 help:  ## Affiche cette aide
@@ -19,6 +19,10 @@ help:  ## Affiche cette aide
 
 setup:  ## Installe les dépendances (uv) + outils dev
 	cd src && uv sync --extra dev
+
+hooks:  ## Installe les hooks Git locaux (pre-commit + pre-push)
+	cd src && uv run pre-commit install --install-hooks
+	cd src && uv run pre-commit install --hook-type pre-push
 
 lint:  ## Lint du code (ruff)
 	cd src && uv run ruff check pipeline corpus_stats.py ingest_hf_datasets.py \

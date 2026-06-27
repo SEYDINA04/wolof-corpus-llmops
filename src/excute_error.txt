@@ -24,5 +24,4 @@ Make sure your token has the correct permissions.
 
  Verify:
   - Repo exists: galsenai/wolof_centalized_corpus
-seydina@abuubakr-as-saddiq:~/GalsenAI_LLM_Projet/wolof_scraper/src$ 
-
+seydina@abuubakr-as-saddiq:~/GalsenAI_LLM_Projet/wolof_scraper/src$

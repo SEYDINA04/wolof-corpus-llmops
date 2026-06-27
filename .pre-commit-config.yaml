@@ -1,0 +1,46 @@
+# ════════════════════════════════════════════════════════════════════════
+#  Hooks Git locaux (framework pre-commit) — CI/CD 100% local, sans cloud.
+#
+#  Installation (une fois) :   make hooks
+#  Exécution manuelle :        cd src && uv run pre-commit run --all-files
+#
+#  - À chaque `git commit` : nettoyage fichiers + lint ruff + garde-fous secrets.
+#  - À chaque `git push`   : tests pytest (bloque le push si rouge).
+# ════════════════════════════════════════════════════════════════════════
+
+repos:
+  # --- Garde-fous génériques --------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: detect-private-key                 # empêche de committer une clé privée
+      - id: check-added-large-files            # bloque les gros fichiers (parquet…)
+        args: ["--maxkb=1024"]
+
+  # --- Lint + tests via le venv du projet (mêmes versions que make) -----
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        entry: bash -c 'cd src && uv run ruff check pipeline'
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      - id: ruff-format
+        name: ruff (format check)
+        entry: bash -c 'cd src && uv run ruff format --check pipeline'
+        language: system
+        pass_filenames: false
+        types: [python]
+
+      - id: pytest
+        name: pytest (tests)
+        entry: bash -c 'cd src && uv run pytest -q'
+        language: system
+        pass_filenames: false
+        stages: [pre-push]                     # uniquement au push (plus lourd)

@@ -35,7 +35,7 @@ PYTHON = sys.executable  # .venv/bin/python courant
 
 
 def _run(cmd: list[str], desc: str) -> None:
-    print(f"\n{'─'*70}\n▶ {desc}\n  $ {' '.join(cmd)}\n{'─'*70}")
+    print(f"\n{'─' * 70}\n▶ {desc}\n  $ {' '.join(cmd)}\n{'─' * 70}")
     res = subprocess.run(cmd, cwd=SRC_DIR)
     if res.returncode != 0:
         sys.exit(f"[ÉCHEC] stage '{desc}' code={res.returncode}")
@@ -43,10 +43,18 @@ def _run(cmd: list[str], desc: str) -> None:
 
 # --------------------------------------------------------------------------- #
 def stage_ingest(cfg) -> None:
-    _run([PYTHON, "ingest_hf_datasets.py", "--skip-existing",
-          "--lid-threshold", str(cfg.ingest["lid_threshold"]),
-          "--min-tokens", str(cfg.ingest["min_tokens"])],
-         "INGEST — datasets HF -> data/ingested/")
+    _run(
+        [
+            PYTHON,
+            "ingest_hf_datasets.py",
+            "--skip-existing",
+            "--lid-threshold",
+            str(cfg.ingest["lid_threshold"]),
+            "--min-tokens",
+            str(cfg.ingest["min_tokens"]),
+        ],
+        "INGEST — datasets HF -> data/ingested/",
+    )
 
 
 def stage_centralize(cfg) -> None:
@@ -69,12 +77,21 @@ def stage_merge(cfg) -> None:
 
 
 def stage_stats(cfg) -> None:
-    _run([PYTHON, "corpus_stats.py",
-          "--parquet", str(cfg.p("unified_corpus")),
-          "--sample", str(cfg.stats["lid_sample"]),
-          "--out-dir", str(cfg.p("stats_dir")),
-          "--out-name", "unified_corpus_stats"],
-         "STATS — volumétrie + LID GlotLID")
+    _run(
+        [
+            PYTHON,
+            "corpus_stats.py",
+            "--parquet",
+            str(cfg.p("unified_corpus")),
+            "--sample",
+            str(cfg.stats["lid_sample"]),
+            "--out-dir",
+            str(cfg.p("stats_dir")),
+            "--out-name",
+            "unified_corpus_stats",
+        ],
+        "STATS — volumétrie + LID GlotLID",
+    )
 
 
 def stage_datacard(cfg) -> None:
@@ -94,6 +111,7 @@ def stage_validate(cfg) -> qg.GateReport:
     # trace JSON
     out = cfg.p("stats_dir") / "quality_gates_report.json"
     import json
+
     out.write_text(json.dumps(report.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nRapport gates -> {out}")
     return report
@@ -109,19 +127,29 @@ def stage_publish(cfg) -> None:
         sys.exit("[ERREUR] HF_TOKEN absent (configurer .env ou secret CI).")
 
     from huggingface_hub import HfApi
+
     api = HfApi(token=cfg.hf_token)
     who = api.whoami()
     print(f"Authentifié : {who.get('name')}  orgs={[o['name'] for o in who.get('orgs', [])]}")
 
     msg = f"Pipeline publish — {len(__import__('pandas').read_parquet(cfg.p('unified_corpus'))):,} exemples"
     print("Upload README.md...")
-    api.upload_file(path_or_fileobj=str(cfg.p("datacard")), path_in_repo="README.md",
-                    repo_id=cfg.hf_repo, repo_type=cfg.hf_repo_type, commit_message=msg)
+    api.upload_file(
+        path_or_fileobj=str(cfg.p("datacard")),
+        path_in_repo="README.md",
+        repo_id=cfg.hf_repo,
+        repo_type=cfg.hf_repo_type,
+        commit_message=msg,
+    )
     print("Upload parquet...")
     # on pousse le corpus unifié comme nouveau fichier central
-    api.upload_file(path_or_fileobj=str(cfg.p("unified_corpus")),
-                    path_in_repo=cfg.hf_filename,
-                    repo_id=cfg.hf_repo, repo_type=cfg.hf_repo_type, commit_message=msg)
+    api.upload_file(
+        path_or_fileobj=str(cfg.p("unified_corpus")),
+        path_in_repo=cfg.hf_filename,
+        repo_id=cfg.hf_repo,
+        repo_type=cfg.hf_repo_type,
+        commit_message=msg,
+    )
     print(f"\n✅ PUBLIÉ -> https://huggingface.co/datasets/{cfg.hf_repo}")
 
 

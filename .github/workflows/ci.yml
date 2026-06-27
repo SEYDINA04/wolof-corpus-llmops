@@ -1,15 +1,12 @@
 name: CI
 
-# Intégration continue : à chaque push / pull request sur main,
-# on vérifie le style (ruff) et on lance les tests unitaires (pytest).
-# Les tests des quality gates tournent sur de petits DataFrames synthétiques
-# -> rapides, pas besoin de télécharger les gros datasets.
+# OPTIONNEL — la CI par défaut de ce projet est LOCALE (pre-commit, voir
+# .pre-commit-config.yaml et `make hooks`). Ce workflow n'est conservé que pour
+# les comptes où GitHub Actions est activé ; il ne se déclenche QUE manuellement
+# afin de ne pas générer de runs en échec.
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   lint-test:

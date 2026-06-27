@@ -39,7 +39,9 @@ class GateResult:
 
     def line(self) -> str:
         icon = "✅" if self.passed else "❌"
-        return f"{icon} {self.name:16} attendu={self.expected!s:>12}  obtenu={self.actual!s:>12}  {self.detail}"
+        return (
+            f"{icon} {self.name:16} attendu={self.expected!s:>12}  obtenu={self.actual!s:>12}  {self.detail}"
+        )
 
 
 @dataclass
@@ -82,7 +84,9 @@ def gate_schema(df: pd.DataFrame, expected: dict[str, str]) -> GateResult:
     detail = ""
     if ok and "sources" in expected and len(df):
         sample = df["sources"].iloc[0]
-        is_list = isinstance(sample, (list, tuple)) or hasattr(sample, "__len__") and not isinstance(sample, str)
+        is_list = (
+            isinstance(sample, (list, tuple)) or hasattr(sample, "__len__") and not isinstance(sample, str)
+        )
         if not is_list:
             ok = False
             detail = "colonne 'sources' n'est pas une liste"
@@ -130,27 +134,29 @@ def gate_no_hf_loss(df: pd.DataFrame, hf_df: pd.DataFrame | None) -> GateResult:
     missing = hf_keys - new_keys
     n_new = len(new_keys - hf_keys)
     return GateResult(
-        "no_hf_loss", len(missing) == 0, "0 perte", f"{len(missing)} perdus",
-        f"+{n_new:,} nouveaux"
+        "no_hf_loss", len(missing) == 0, "0 perte", f"{len(missing)} perdus", f"+{n_new:,} nouveaux"
     )
 
 
 # --------------------------------------------------------------------------- #
 # Runner haut niveau
 # --------------------------------------------------------------------------- #
-def fetch_hf_dataframe(repo: str, filename: str, repo_type: str = "dataset",
-                       token: str | None = None) -> pd.DataFrame | None:
+def fetch_hf_dataframe(
+    repo: str, filename: str, repo_type: str = "dataset", token: str | None = None
+) -> pd.DataFrame | None:
     """Télécharge le parquet actuellement publié sur HF (None si indisponible)."""
     try:
         from huggingface_hub import hf_hub_download
+
         p = hf_hub_download(repo, filename, repo_type=repo_type, token=token)
         return pd.read_parquet(p)
     except Exception:
         return None
 
 
-def run_gates(parquet_path: str | Path, gates_cfg: dict,
-              stats: dict | None = None, hf_df: pd.DataFrame | None = None) -> GateReport:
+def run_gates(
+    parquet_path: str | Path, gates_cfg: dict, stats: dict | None = None, hf_df: pd.DataFrame | None = None
+) -> GateReport:
     """Exécute tous les gates configurés sur le parquet donné."""
     df = pd.read_parquet(parquet_path)
     report = GateReport()

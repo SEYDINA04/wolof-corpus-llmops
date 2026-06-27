@@ -81,7 +81,7 @@ Pour vitesse (fast):
    - Dédupliquer: "mot mot mot" → "mot" (>3 répétitions)
    - Filtrer: chunks avec confidence < threshold
    - Fusionner: détecter overlap, garder 1×
-   
+
 ✅ ÉTAPE 4: WER/CER MEASUREMENT
    WER = pourcentage mots mal transcrits
    CER = pourcentage caractères mal transcrits
@@ -140,7 +140,7 @@ CER (Char Error Rate):
 1. Run pipeline 4 fois (2 vidéos × 2 configs)
    Config 1: STRIDE=18, CONFIDENCE_THRESHOLD=0.5
    Config 2: STRIDE=16, CONFIDENCE_THRESHOLD=0.6
-   
+
 2. Exporter 2 JSON par vidéo
 
 3. Comparer WER/Confidence
@@ -151,7 +151,7 @@ CER (Char Error Rate):
    - Relire 10% du texte
    - Marquer hallucinations
    - Corriger 50 phrases
-   
+
 6. Upload corpus validé → HuggingFace
 
 

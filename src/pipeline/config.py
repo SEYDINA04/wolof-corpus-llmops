@@ -19,8 +19,8 @@ from typing import Any
 
 import yaml
 
-SRC_DIR = Path(__file__).resolve().parent.parent          # .../wolof_scraper/src
-REPO_ROOT = SRC_DIR.parent                                  # .../wolof_scraper
+SRC_DIR = Path(__file__).resolve().parent.parent  # .../wolof_scraper/src
+REPO_ROOT = SRC_DIR.parent  # .../wolof_scraper
 DEFAULT_CONFIG = SRC_DIR / "pipeline.yaml"
 
 

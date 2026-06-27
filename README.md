@@ -1,6 +1,6 @@
 # 🌍 Wolof Corpus — LLMOps Pipeline
 
-[![CI](https://github.com/SEYDINA04/wolof-corpus-llmops/actions/workflows/ci.yml/badge.svg)](https://github.com/SEYDINA04/wolof-corpus-llmops/actions/workflows/ci.yml)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-FAB040?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![uv](https://img.shields.io/badge/managed%20with-uv-DE5FE9?logo=astral&logoColor=white)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/badge/lint-ruff-D7FF64?logo=ruff&logoColor=black)](https://github.com/astral-sh/ruff)
@@ -115,15 +115,24 @@ make help                     # toutes les commandes
 
 ---
 
-## 🔄 CI/CD (GitHub Actions)
+## 🔄 CI/CD — automatisation locale (hooks Git)
 
-| Workflow | Déclencheur | Rôle |
-|---|---|---|
-| `ci.yml` | push / PR | `ruff` (lint) + `pytest` (tests) |
-| `publish.yml` | manuel (`workflow_dispatch`) | pipeline complet + gates + publication |
+Les contrôles qualité s'exécutent **automatiquement en local** via
+[`pre-commit`](https://pre-commit.com/) — aucune dépendance à un cloud CI.
 
-**Publication via GitHub** : onglet *Actions* → *Publish corpus to HuggingFace*
-→ *Run workflow* → taper `PUBLISH`. Pré-requis : secret `HF_TOKEN` du dépôt.
+```bash
+make hooks        # installe les hooks (une fois)
+```
+
+| Déclencheur | Vérifications |
+|---|---|
+| `git commit` | nettoyage fichiers + `ruff` (lint + format) + garde-fous secrets/gros fichiers |
+| `git push` | `pytest` (bloque le push si rouge) |
+| `make publish` | pipeline complet + **quality gates** (refus si KO) avant publication HF |
+
+> Des workflows GitHub Actions (`.github/workflows/`) sont fournis en option et
+> deviennent actifs si tu utilises un compte GitHub avec Actions activé. Le
+> chemin **par défaut et recommandé** ici est l'automatisation locale.
 
 ---
 

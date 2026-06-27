@@ -121,19 +121,32 @@ cd src
 
 ---
 
-## 6. CI/CD (GitHub Actions)
+## 6. CI/CD — automatisation locale (hooks Git)
 
-| Workflow | Fichier | Déclencheur | Rôle |
-|---|---|---|---|
-| **CI** | `.github/workflows/ci.yml` | push / PR | `ruff` (lint) + `pytest` (tests) |
-| **Publish** | `.github/workflows/publish.yml` | manuel (`workflow_dispatch`) | pipeline complet + gates + publication |
+La CI/CD **par défaut est locale**, via [`pre-commit`](https://pre-commit.com/) :
+indépendante de tout cloud, gratuite, exécutée sur ta machine.
 
-### Lancer une publication depuis GitHub
-1. Onglet **Actions** → workflow **« Publish corpus to HuggingFace »**.
-2. **Run workflow** → taper `PUBLISH` dans le champ de confirmation.
-3. (Option) cocher *run_ingest* pour relancer l'ingestion complète.
-4. Le job s'arrête tout seul si un quality gate échoue ; sinon il publie et
-   archive les rapports (`unified_corpus_stats.json`, `quality_gates_report.json`).
+### Installation (une fois)
+```bash
+make hooks      # = pre-commit install + pre-commit install --hook-type pre-push
+```
+
+### Ce qui se déclenche automatiquement
+| Moment | Hooks |
+|---|---|
+| `git commit` | trailing-whitespace, end-of-file, check-yaml, detect-private-key, check-added-large-files, `ruff` (lint + format) |
+| `git push` | `pytest` (bloque le push si un test échoue) |
+
+Exécution manuelle de tous les hooks :
+```bash
+cd src && uv run pre-commit run --all-files
+```
+
+### Workflows GitHub Actions (optionnels)
+Les fichiers `.github/workflows/ci.yml` et `publish.yml` sont **conservés** mais
+en déclenchement **manuel uniquement** (`workflow_dispatch`). Ils ne servent que
+si tu utilises un compte GitHub avec Actions activé. Sinon, ignore-les : tout
+passe par les hooks locaux + `make`.
 
 ---
 

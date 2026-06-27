@@ -28,6 +28,7 @@ def build_readme(parquet_path: str | Path, stats: dict | None) -> str:
     # taille Arrow décompressée (dataset_size)
     try:
         from datasets import Dataset
+
         num_bytes = Dataset.from_pandas(df, preserve_index=False).data.nbytes
     except Exception:
         num_bytes = _raw_text_bytes(df) * 2  # approximation de repli
