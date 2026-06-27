@@ -1,0 +1,60 @@
+# ════════════════════════════════════════════════════════════════════════
+#  pipeline.yaml — Configuration unique du pipeline LLMOps du corpus wolof.
+#  Tout se règle ICI : aucune valeur en dur dans le code.
+# ════════════════════════════════════════════════════════════════════════
+
+# --- Cible HuggingFace ----------------------------------------------------
+hf:
+  repo: galsenai/wolof_centalized_corpus   # peut être surchargé par $HF_DATASET_REPO
+  repo_type: dataset
+  filename: data/train-00000-of-00001.parquet
+  split: train
+
+# --- Arborescence (chemins relatifs au dossier src/) ----------------------
+paths:
+  ingested_dir: data/ingested                                  # sortie étape 1
+  ingested_corpus: wolof_ingested_corpus/data/train-00000-of-00001.parquet  # étape 2
+  central_clone: wolof_centalized_corpus/data/train-00000-of-00001.parquet  # corpus HF cloné
+  unified_corpus: wolof_unified_corpus/data/train-00000-of-00001.parquet    # étape 3
+  stats_dir: data/stats                                        # rapports stats
+  datacard: wolof_centalized_corpus/README.md                  # data card poussée
+
+# --- Étape 1 : Ingestion des datasets HF ----------------------------------
+ingest:
+  lid_label: wol_Latn          # langue cible (GlotLID)
+  lid_threshold: 0.5           # confiance minimale pour garder une ligne
+  min_tokens: 3                # longueur minimale (mots)
+  datasets:
+    - { repo: soynade-research/FineWeb2-HQ-50k-Wolof,         cols: [wolof],                    split: train }
+    - { repo: soynade-research/Wolof-Non-Standard-Orthography, cols: [wo, non_standardized],     split: train }
+    - { repo: ZigZeug/Baatukaay-wolof-translated-dataset,      cols: [wo],                       split: train }
+    - { repo: bilalfaye/english-wolof-french-dataset,         cols: [wo],                       split: train }
+    - { repo: bilalfaye/wolof-english-french,                 cols: [wo],                       split: train }
+    - { repo: Bassoumm/wolof-french-dictionary,               cols: [wolof],                    split: train }
+    - { repo: skonteye/French-Wolof-Dataset-With-Sources,     cols: [wolof],                    split: train }
+    - { repo: galsenai/english-wolof-smol-translation,        cols: [wo],                       split: train }
+    - { repo: MaroneAI/French-Wolof_Translation-Dataset,      cols: [target],                   split: train }
+    - { repo: MaroneAI/Wolof-to-French_Translation-Dataset,   cols: [Input],                    split: train }
+    - { repo: mbaye930/wolof-arabic-parallel-corpus,          cols: [wolof],                    split: train }
+    - { repo: soynade-research/Wolof-Agri-Captions,           cols: [wolof],                    split: train }
+    - { repo: vonewman/fleurs-wolof-dataset,                  cols: [transcription],            split: train }
+    - { repo: michsethowusu/wolof-sentiments-corpus,          cols: [Wolof],                    split: train }
+    - { repo: mbaye930/WolofEntityLinking,                    cols: [text],                     split: train }
+    - { repo: m-a-d-i/wori-wolof-instructions,                cols: [text_wo, instruction_wo],  split: train }
+    - { repo: ngia/alpaca-data-in-wolof,                      cols: [instruction, output],      split: train }
+
+# --- Étape 4 : Statistiques -----------------------------------------------
+stats:
+  lid_sample: 30000            # échantillon pour la détection de langue
+
+# --- Étape 5 : Quality Gates (contrôles BLOQUANTS avant publication) ------
+# Si UN seul échoue, la publication est refusée.
+quality_gates:
+  schema:
+    columns: { text: str, sources: list }   # schéma attendu du parquet
+  min_examples: 600000          # nb minimal d'exemples dans le corpus unifié
+  max_empty: 0                  # nb maximal de textes vides tolérés
+  max_duplicate_pct: 0.0        # % maximal de doublons exacts tolérés
+  min_wolof_pct: 90.0           # % minimal de wolof (LID sur échantillon)
+  min_raw_text_mb: 100.0        # taille minimale de texte brut UTF-8 (objectif 100 Mo)
+  require_no_hf_loss: true      # interdit toute perte d'un texte déjà présent sur HF

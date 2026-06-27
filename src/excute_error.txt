@@ -1,0 +1,28 @@
+seydina@abuubakr-as-saddiq:~/GalsenAI_LLM_Projet/wolof_scraper/src$ uv run push_wolof_to_hf.py     --parquet wolof_centalized_corpus/data/train-00000-of-00001.parquet     --token-file wolof_centalized_corpus/galsenai_lab_access_token.txt
+============================================================
+PUSH CORPUS WOLOF VERS HUGGINGFACE
+============================================================
+
+Authentification HuggingFace...
+ Loading token from: wolof_centalized_corpus/galsenai_lab_access_token.txt
+Authentifié
+
+Loading: /home/seydina/GalsenAI_LLM_Projet/wolof_scraper/src/wolof_centalized_corpus/data/train-00000-of-00001.parquet
+ 304,499 items loaded
+
+Sample:
+  text: Bataaxal bii jëwriñu lu ajju ci mbiru bitim réew bu Ekuwatër moo ko wara wóoral,...
+  sources: ['galsenai/french-wolof-translation']
+
+Uploading to galsenai/wolof_centalized_corpus...
+
+ ERROR: (Request ID: Root=1-6a05f018-77e95afa4409e1876cd55252;ffb73145-4356-40f6-9bf7-56c2698afb90)
+
+403 Forbidden: You have read access but not the required permissions for this operation.
+Cannot access content at: https://huggingface.co/datasets/galsenai/wolof_centalized_corpus.git/info/lfs/objects/batch.
+Make sure your token has the correct permissions.
+
+ Verify:
+  - Repo exists: galsenai/wolof_centalized_corpus
+seydina@abuubakr-as-saddiq:~/GalsenAI_LLM_Projet/wolof_scraper/src$ 
+

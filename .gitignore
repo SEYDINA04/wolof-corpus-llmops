@@ -1,0 +1,39 @@
+# ── Secrets / credentials (NE JAMAIS committer) ──────────────────────────
+.env
+*.env
+!.env.example
+*token*.txt
+*access_token*
+hf_access_token.txt
+galsenai_lab_access_token.txt
+
+# ── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+.venv/
+.uv/
+.pytest_cache/
+.ruff_cache/
+
+# ── Données générées / volumineuses (régénérables par le pipeline) ───────
+data/
+*.jsonl
+*.parquet
+*.csv
+
+# ── Dépôts de données clonés (ont leur propre git + données HF) ──────────
+src/wolof_centalized_corpus/
+src/wolof_ingested_corpus/
+src/wolof_unified_corpus/
+src/hf_dataset_original/
+
+# ── Modèles / médias / artefacts lourds ──────────────────────────────────
+*.bin
+*.mp4
+*.html
+lid.176.bin
+.cache/
+
+# ── Logs ─────────────────────────────────────────────────────────────────
+logs/
+*.log

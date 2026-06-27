@@ -1,0 +1,141 @@
+INVENTAIRE DU PROJET wolof_scraper
+====================================
+Date : 2026-06-02
+
+STRUCTURE DU PROJET
+-------------------
+
+wolof_scraper/
+│
+├── README.md
+├── main.py                          # Point d'entrée principal
+├── pyproject.toml                   # Config projet (racine)
+├── .python-version
+├── .gitignore
+│
+├── files(14)/                       # Fichiers ASR Whisper
+│   ├── Colab_ASR_Pipeline_Complete_v2.ipynb
+│   ├── GUIDE_RAPIDE_Pipeline_ASR.txt
+│   └── whosper_asr_complete_pipeline.py
+│
+├── scripts/
+│   └── run_scraper.py
+│
+├── data/                            # Dossier data racine (vide actuellement)
+│   ├── processed/
+│   ├── raw/
+│   └── youtube_transcriptions_wolof/
+│
+└── src/                             # Code source principal
+    ├── __init__.py
+    ├── pyproject.toml
+    ├── uv.lock
+    ├── lid.176.bin                  # Modèle FastText détection de langue
+    │
+    ├── — SCRAPERS —
+    ├── scraper.py
+    ├── scraper_author.py
+    ├── scraper_by_category.py
+    ├── scraper_full_content.py
+    ├── scraper_new_articles.py
+    │
+    ├── — TRANSCRIPTION AUDIO/VIDEO —
+    ├── transcribe_with_whosper.py
+    ├── transcribe_with_whosper_chunked.py
+    ├── transcribe_with_whosper_offload.py
+    ├── transcribe_with_whosper_offload_complete.py
+    ├── transcribe_youtube_videos.py
+    ├── extract_youtube_videos.py
+    ├── analyse_youtube_content.py
+    │
+    ├── — TRAITEMENT & NETTOYAGE —
+    ├── deduplicator.py
+    ├── split_corpus_to_sentences.py
+    ├── consolidate_wolof_online.py
+    │
+    ├── — VALIDATION —
+    ├── validator.py
+    ├── validation_n1_filtering.py
+    ├── validation_n1_wolof_adapted.py
+    ├── debug_language_detection.py
+    │
+    ├── — EXPORT & DATASETS —
+    ├── convert_to_hf_format.py
+    ├── merge_with_hf_dataset.py
+    ├── merge_without_dedup.py
+    ├── push_wolof_to_hf.py
+    ├── compare_dataset_formats.py
+    │
+    ├── — HTML BRUTS —
+    ├── article_2427.html
+    ├── article_2554.html
+    ├── article_2680.html
+    │
+    ├── excute_error.txt
+    │
+    ├── data/                        # Données générées
+    │   ├── raw/                     # Articles bruts scrapés par catégorie
+    │   │   ├── author_page_articles.jsonl
+    │   │   ├── category_caada.jsonl
+    │   │   ├── category_diine.jsonl
+    │   │   ├── category_nekkin.jsonl
+    │   │   ├── category_politig.jsonl
+    │   │   ├── category_tàggat_yaram.jsonl
+    │   │   ├── new_articles_to_scrape.jsonl
+    │   │   ├── option1_homepage_articles.jsonl
+    │   │   └── option2_all_categories.jsonl
+    │   │
+    │   ├── processed/               # Corpus intermédiaires
+    │   │   ├── corpus_final_v2.jsonl
+    │   │   └── option3_full_corpus.jsonl
+    │   │
+    │   ├── validated/               # Résultats validation N1
+    │   │   ├── n1_passed_corpus.jsonl
+    │   │   ├── n1_rejected_corpus.jsonl
+    │   │   ├── n1_wolof_passed.jsonl
+    │   │   └── n1_wolof_rejected.jsonl
+    │   │
+    │   ├── final/                   # Datasets finaux
+    │   │   ├── wolof_asr_whosper_v5_HF_FORMAT.jsonl
+    │   │   ├── wolof_online_hf_format.jsonl
+    │   │   ├── wolof_online_sentences.jsonl
+    │   │   ├── wolof_online_text_corpus.jsonl
+    │   │   ├── wolof_online_video_articles.jsonl
+    │   │   ├── youtube_videos_complete_list.csv
+    │   │   └── youtube_videos_list.jsonl
+    │   │
+    │   ├── youtube_transcriptions/
+    │   │   └── transcriptions_summary.json
+    │   │
+    │   ├── youtube_transcriptions_wolof/
+    │   │   ├── _eqpwNEXEzs.json
+    │   │   ├── vrZIxImDf8Y.json
+    │   │   └── transcriptions_summary.json
+    │   │
+    │   ├── youtube_transcriptions_wolof_chunked/  (vide)
+    │   │
+    │   └── youtube_videos/
+    │       ├── _eqpwNEXEzs.mp4
+    │       ├── _eqpwNEXEzs_whosper.json
+    │       ├── vrZIxImDf8Y.mp4
+    │       ├── vrZIxImDf8Y_whosper.json
+    │       └── wolof_asr_whosper_v5.jsonl
+    │
+    ├── hf_dataset_original/         # Dataset HuggingFace d'origine
+    │   ├── README.md
+    │   ├── .gitattributes
+    │   └── data/train-00000-of-00001.parquet
+    │
+    └── .venv/                       # Environnement virtuel Python 3.12
+
+
+RESUME
+------
+Projet de scraping et constitution d'un corpus wolof pour le LLM/ASR.
+Pipeline complet :
+  scraping web → transcription audio (Whisper) → nettoyage/déduplication
+  → validation langue → export HuggingFace
+
+- 2 vidéos YouTube transcrites
+- ~9 fichiers de données brutes (catégories : caada, diine, nekkin, politig, tàggat yaram)
+- Dataset final en format HuggingFace prêt à pousser

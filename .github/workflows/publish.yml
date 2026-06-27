@@ -1,0 +1,71 @@
+name: Publish corpus to HuggingFace
+
+# Déploiement continu — DÉCLENCHEMENT MANUEL uniquement (workflow_dispatch).
+# Le job exécute le pipeline complet PUIS publie vers HF, mais la publication
+# est conditionnée par la réussite des QUALITY GATES (étape validate).
+#
+# Pré-requis : définir le secret du dépôt
+#   Settings > Secrets and variables > Actions > New repository secret
+#   Name = HF_TOKEN   (token HuggingFace avec droit d'écriture sur galsenai)
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_ingest:
+        description: "Relancer l'ingestion des datasets HF (long) ?"
+        type: boolean
+        default: false
+      confirm:
+        description: "Taper PUBLISH pour confirmer la publication"
+        required: true
+        default: ""
+
+jobs:
+  publish:
+    if: ${{ github.event.inputs.confirm == 'PUBLISH' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_DATASET_REPO: galsenai/wolof_centalized_corpus
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Ingestion (optionnelle)
+        if: ${{ github.event.inputs.run_ingest == 'true' }}
+        run: uv run python -m pipeline.run ingest
+
+      - name: Build corpus (centralize -> merge -> stats -> datacard)
+        run: |
+          uv run python -m pipeline.run centralize
+          uv run python -m pipeline.run merge
+          uv run python -m pipeline.run stats
+          uv run python -m pipeline.run datacard
+
+      - name: Quality gates (bloquant)
+        run: uv run python -m pipeline.run validate
+
+      - name: Publish to HuggingFace
+        run: uv run python -m pipeline.run publish
+
+      - name: Upload reports artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-reports
+          path: |
+            src/data/stats/unified_corpus_stats.json
+            src/data/stats/quality_gates_report.json

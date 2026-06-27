@@ -1,0 +1,199 @@
+🎤 GUIDE RAPIDE: PIPELINE ASR COMPLET (Colab)
+==============================================
+
+📁 FICHIERS CRÉÉS:
+1. whosper_asr_complete_pipeline.py  (script Python standalone)
+2. Colab_ASR_Pipeline_Complete_v2.ipynb  (notebook Colab prêt-à-exécuter)
+
+🚀 ÉTAPES POUR COLAB (5 MINUTES):
+
+1️⃣  OUVRIR COLAB
+   - Accéder: https://colab.research.google.com
+   - Créer nouveau notebook
+   - Copier/coller "Colab_ASR_Pipeline_Complete_v2.ipynb"
+
+2️⃣  OU IMPORTER LE NOTEBOOK
+   - File → Open notebook → Upload → choisir le .ipynb
+
+3️⃣  EXÉCUTER CELLULE PAR CELLULE
+   CELLULE 1: Setup (GPU check)
+   CELLULE 2: Installation packages
+   CELLULE 3-5: Définir classes (AudioChunker, Transcriber, PostProcessor, WER)
+   CELLULE 6: Config (ton chemin audio)
+   CELLULE 7-10: Exécuter pipeline (chunking → confidence → post-proc → WER)
+
+4️⃣  RÉSULTATS
+   - JSON exporté à: /tmp/wolof_transcriptions_v2/
+   - Télécharger via: Files → Download
+
+═════════════════════════════════════════════
+
+⚙️  PARAMÈTRES À AJUSTER:
+
+AUDIO_PATH = "/tmp/wolof_videos/_eqpwNEXEzs.mp4"
+└─ Change à ta vidéo Colab
+
+CHUNK_DURATION = 20  # 20 secondes (était 12s)
+STRIDE = 18          # 18 secondes (était 11s)
+OVERLAP = 2s         # Automatique
+
+CONFIDENCE_THRESHOLD = 0.5  # Filtrer < 50%
+
+
+✅ CONFIGURATIONS RECOMMANDÉES:
+
+Pour qualité MAXIMUM (slow):
+  CHUNK_DURATION = 30
+  STRIDE = 25
+  OVERLAP = 5s
+  CONFIDENCE_THRESHOLD = 0.6
+  ⏱️ ~15-20 min pour 1h30
+
+Pour équilibre (default):
+  CHUNK_DURATION = 20
+  STRIDE = 18
+  OVERLAP = 2s
+  CONFIDENCE_THRESHOLD = 0.5
+  ⏱️ ~12-15 min pour 1h30
+
+Pour vitesse (fast):
+  CHUNK_DURATION = 15
+  STRIDE = 13
+  OVERLAP = 2s
+  CONFIDENCE_THRESHOLD = 0.4
+  ⏱️ ~10-12 min pour 1h30
+
+
+═════════════════════════════════════════════
+
+📊 ÉTAPES EXPLIQUÉES:
+
+✅ ÉTAPE 1: CHUNKING
+   Audio 5,211s → 473 chunks de 20s (overlap 2s)
+   Pourquoi: Plus de contexte syntaxe Wolof
+
+✅ ÉTAPE 2: CONFIDENCE EXTRACTION
+   Par chunk: score 0-1.0 = certitude du modèle
+   Log-probs des tokens générés
+   Filtre bas confidence = hallucinations
+
+✅ ÉTAPE 3: POST-PROCESSING
+   - Dédupliquer: "mot mot mot" → "mot" (>3 répétitions)
+   - Filtrer: chunks avec confidence < threshold
+   - Fusionner: détecter overlap, garder 1×
+   
+✅ ÉTAPE 4: WER/CER MEASUREMENT
+   WER = pourcentage mots mal transcrits
+   CER = pourcentage caractères mal transcrits
+   Besoin référence Wolof pour calculer
+
+
+═════════════════════════════════════════════
+
+❌ PROBLÈMES COURANTS:
+
+"ModuleNotFoundError: whosper"
+→ Relancer Cellule 2 (Installation)
+→ Attendre ~30s
+
+"CUDA out of memory"
+→ Réduire CHUNK_DURATION à 15
+→ Ou utiliser CPU (plus lent)
+
+Confidence trop basse (< 0.4 moyenne)
+→ Augmenter overlap: STRIDE = 15
+→ Vérifier qualité audio (bruitée?)
+→ Whosper peut ne pas être optimisé pour ce dialecte
+
+JSON non exporté
+→ Vérifier OUTPUT_DIR existe
+→ Check Colab Files panel (à droite)
+
+
+═════════════════════════════════════════════
+
+📈 ÉVALUATION RÉSULTATS:
+
+CONFIANCE MOYENNE:
+  > 0.7 = Excellente
+  0.6-0.7 = Bonne
+  0.5-0.6 = Acceptable
+  < 0.5 = Faible (relancer avec overlap ++)
+
+WER (Word Error Rate):
+  < 15% = Excellent (rare)
+  15-25% = Très bon
+  25-35% = Bon (acceptable)
+  35-45% = Moyen
+  > 45% = Faible (besoin fine-tune)
+
+CER (Char Error Rate):
+  < 10% = Excellent
+  10-15% = Très bon
+  15-20% = Bon
+
+
+═════════════════════════════════════════════
+
+🎯 WORKFLOW COMPLET GalsenAI:
+
+1. Run pipeline 4 fois (2 vidéos × 2 configs)
+   Config 1: STRIDE=18, CONFIDENCE_THRESHOLD=0.5
+   Config 2: STRIDE=16, CONFIDENCE_THRESHOLD=0.6
+   
+2. Exporter 2 JSON par vidéo
+
+3. Comparer WER/Confidence
+
+4. Garder meilleur output
+
+5. Validation HUMAINE (linguistes Wolof):
+   - Relire 10% du texte
+   - Marquer hallucinations
+   - Corriger 50 phrases
+   
+6. Upload corpus validé → HuggingFace
+
+
+═════════════════════════════════════════════
+
+💬 EXEMPLE SORTIE CELLULE 10:
+
+✅ RÉSUMÉ:
+   Durée vidéo: 1410.3s
+   Chunks traités: 473
+   Chunks valides (conf>0.5): 421
+   Caractères finaux: 45230
+   Confidence moyenne: 0.568
+
+📊 WER/CER (si référence):
+   WER (Word Error Rate): 28.5%
+   CER (Char Error Rate): 12.1%
+   ⚠️  MOYEN (WER 25-35%)
+
+
+═════════════════════════════════════════════
+
+📚 RESSOURCES:
+
+Whosper GitHub:
+  https://github.com/sudoping01/whosper
+
+OpenAI Whisper:
+  https://github.com/openai/whisper
+
+PEFT (Parameter-Efficient Fine-Tuning):
+  https://github.com/huggingface/peft
+
+
+═════════════════════════════════════════════
+
+✨ TIPS:
+
+- Toujours tester avec petite vidéo d'abord (< 1 min)
+- Sauvegarder outputs régulièrement
+- Comparer avec/sans confidence filtering
+- Documenter WER/Confidence par run
+- Itérer: feedback linguiste → réentraînement
+
+═════════════════════════════════════════════
