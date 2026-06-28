@@ -55,6 +55,13 @@ DATASETS = [
     # --- instructions (LLM) ---
     {"repo": "m-a-d-i/wori-wolof-instructions", "cols": ["text_wo", "instruction_wo"], "split": "train"},
     {"repo": "ngia/alpaca-data-in-wolof", "cols": ["instruction", "output"], "split": "train"},
+    # --- monolingue web / encyclopédique (gros volume, multi-configs) ---
+    {"repo": "HPLT/HPLT2.0_cleaned", "cols": ["text"], "config": "wol_Latn", "split": "train"},
+    {"repo": "cis-lmu/Glot500", "cols": ["text"], "config": "wol_Latn", "split": "train"},
+    {"repo": "HuggingFaceFW/fineweb-2", "cols": ["text"], "config": "wol_Latn", "split": "train"},
+    {"repo": "cis-lmu/GlotCC-V1", "cols": ["content"], "config": "wol-Latn", "split": "train"},
+    {"repo": "aiana94/polynews", "cols": ["text"], "config": "wol_Latn", "split": "train"},
+    {"repo": "Davlan/sib200", "cols": ["text"], "config": "wol_Latn", "split": "train"},
 ]
 
 
@@ -114,10 +121,13 @@ def ingest_one(cfg: dict, model, lid_threshold: float, min_tokens: int):
     trust = cfg.get("lid") is False or "min_tokens" in cfg
 
     badge = "  [source de confiance: filtres relâchés]" if trust else ""
-    print(f"\n{'='*60}\n📥 {repo}  (colonnes: {cols}){badge}\n{'='*60}")
+    config = cfg.get("config")
+    cfg_txt = f"  config={config}" if config else ""
+    print(f"\n{'='*60}\n📥 {repo}{cfg_txt}  (colonnes: {cols}){badge}\n{'='*60}")
 
-    # On charge en gardant uniquement les colonnes texte voulues si possible
-    ds = load_dataset(repo, split=split)
+    # On charge en gardant uniquement les colonnes texte voulues si possible.
+    # `config` (ex: 'wol_Latn') sélectionne le sous-ensemble d'un dataset multilingue.
+    ds = load_dataset(repo, config, split=split) if config else load_dataset(repo, split=split)
     available = set(ds.column_names)
     use_cols = [c for c in cols if c in available]
     if not use_cols:

@@ -42,6 +42,13 @@ ingest:
     - { repo: mbaye930/WolofEntityLinking,                    cols: [text],                     split: train, lid: false, min_tokens: 1 }  # NER annoté: source de confiance
     - { repo: m-a-d-i/wori-wolof-instructions,                cols: [text_wo, instruction_wo],  split: train }
     - { repo: ngia/alpaca-data-in-wolof,                      cols: [instruction, output],      split: train }
+    # --- monolingue web / encyclopédique (gros volume, multi-configs) ---
+    - { repo: HPLT/HPLT2.0_cleaned,    cols: [text],    config: wol_Latn, split: train }
+    - { repo: cis-lmu/Glot500,         cols: [text],    config: wol_Latn, split: train }
+    - { repo: HuggingFaceFW/fineweb-2, cols: [text],    config: wol_Latn, split: train }
+    - { repo: cis-lmu/GlotCC-V1,       cols: [content], config: wol-Latn, split: train }
+    - { repo: aiana94/polynews,        cols: [text],    config: wol_Latn, split: train }
+    - { repo: Davlan/sib200,           cols: [text],    config: wol_Latn, split: train }
 
 # --- Étape 4 : Statistiques -----------------------------------------------
 stats:
