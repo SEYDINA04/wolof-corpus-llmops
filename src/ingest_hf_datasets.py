@@ -51,7 +51,7 @@ DATASETS = [
     {"repo": "soynade-research/Wolof-Agri-Captions", "cols": ["wolof"], "split": "train"},
     {"repo": "vonewman/fleurs-wolof-dataset", "cols": ["transcription"], "split": "train"},
     {"repo": "michsethowusu/wolof-sentiments-corpus", "cols": ["Wolof"], "split": "train"},
-    {"repo": "mbaye930/WolofEntityLinking", "cols": ["text"], "split": "train"},
+    {"repo": "mbaye930/WolofEntityLinking", "cols": ["text"], "split": "train", "lid": False, "min_tokens": 1},
     # --- instructions (LLM) ---
     {"repo": "m-a-d-i/wori-wolof-instructions", "cols": ["text_wo", "instruction_wo"], "split": "train"},
     {"repo": "ngia/alpaca-data-in-wolof", "cols": ["instruction", "output"], "split": "train"},
@@ -106,7 +106,15 @@ def ingest_one(cfg: dict, model, lid_threshold: float, min_tokens: int):
     cols = cfg["cols"]
     split = cfg.get("split", "train")
 
-    print(f"\n{'='*60}\n📥 {repo}  (colonnes: {cols})\n{'='*60}")
+    # Overrides par dataset (sources de confiance, annotées manuellement) :
+    #   "lid": false        -> ne pas appliquer le filtre de langue GlotLID
+    #   "min_tokens": N      -> seuil de longueur spécifique
+    eff_model = None if cfg.get("lid") is False else model
+    eff_min_tokens = int(cfg.get("min_tokens", min_tokens))
+    trust = cfg.get("lid") is False or "min_tokens" in cfg
+
+    badge = "  [source de confiance: filtres relâchés]" if trust else ""
+    print(f"\n{'='*60}\n📥 {repo}  (colonnes: {cols}){badge}\n{'='*60}")
 
     # On charge en gardant uniquement les colonnes texte voulues si possible
     ds = load_dataset(repo, split=split)
@@ -143,12 +151,12 @@ def ingest_one(cfg: dict, model, lid_threshold: float, min_tokens: int):
                 continue
             stats["candidates"] += 1
 
-            if len(text.split()) < min_tokens:
+            if len(text.split()) < eff_min_tokens:
                 stats["rejected_short"] += 1
                 continue
 
-            if model is not None:
-                label, conf = predict_lang(model, text)
+            if eff_model is not None:
+                label, conf = predict_lang(eff_model, text)
                 stats["lang_counts"][label] = stats["lang_counts"].get(label, 0) + 1
                 if label != WOLOF_LABEL or conf < lid_threshold:
                     stats["rejected_lang"] += 1

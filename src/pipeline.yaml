@@ -39,7 +39,7 @@ ingest:
     - { repo: soynade-research/Wolof-Agri-Captions,           cols: [wolof],                    split: train }
     - { repo: vonewman/fleurs-wolof-dataset,                  cols: [transcription],            split: train }
     - { repo: michsethowusu/wolof-sentiments-corpus,          cols: [Wolof],                    split: train }
-    - { repo: mbaye930/WolofEntityLinking,                    cols: [text],                     split: train }
+    - { repo: mbaye930/WolofEntityLinking,                    cols: [text],                     split: train, lid: false, min_tokens: 1 }  # NER annoté: source de confiance
     - { repo: m-a-d-i/wori-wolof-instructions,                cols: [text_wo, instruction_wo],  split: train }
     - { repo: ngia/alpaca-data-in-wolof,                      cols: [instruction, output],      split: train }
 
