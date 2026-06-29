@@ -80,7 +80,7 @@ Aucune publication si un seul échoue (config dans `src/pipeline.yaml`) :
 
 ## 📚 Ressources & sources de données
 
-**Datasets HF ingérés (17)** — déclarés dans `src/pipeline.yaml` :
+**Datasets HF ingérés (28)** — déclarés dans `src/pipeline.yaml` :
 
 | Catégorie | Sources |
 |---|---|
@@ -88,6 +88,62 @@ Aucune publication si un seul échoue (config dans `src/pipeline.yaml`) :
 | Traductions | `ZigZeug/Baatukaay-wolof-translated-dataset`, `bilalfaye/english-wolof-french-dataset`, `bilalfaye/wolof-english-french`, `Bassoumm/wolof-french-dictionary`, `skonteye/French-Wolof-Dataset-With-Sources`, `galsenai/english-wolof-smol-translation`, `MaroneAI/French-Wolof_Translation-Dataset`, `MaroneAI/Wolof-to-French_Translation-Dataset`, `mbaye930/wolof-arabic-parallel-corpus` |
 | ASR / divers | `soynade-research/Wolof-Agri-Captions`, `vonewman/fleurs-wolof-dataset`, `michsethowusu/wolof-sentiments-corpus`, `mbaye930/WolofEntityLinking` |
 | Instructions LLM | `m-a-d-i/wori-wolof-instructions`, `ngia/alpaca-data-in-wolof` |
+| Web / encyclo / parallèle | `HPLT/HPLT2.0_cleaned`, `cis-lmu/Glot500`, `HuggingFaceFW/fineweb-2`, `cis-lmu/GlotCC-V1`, `aiana94/polynews`, `Davlan/sib200`, `wikimedia/wikipedia`, `alexandrainst/multi-wiki-qa`, `Lahad/fr_wolof_quran_corpus`, `dofbi/jolof`, `AfriNLP/AfriNLLB-train` |
+
+### Répartition par source (corpus unifié — 674 282 ex.)
+
+> Sources cumulées (33 fusionnées avec le central historique). Régénéré à chaque fusion.
+
+<details><summary>Voir les 44 sources</summary>
+
+| source | exemples |
+|---|---:|
+| `michsethowusu/wolof-sentiments-corpus` | 130 730 |
+| `ZigZeug/Baatukaay-wolof-translated-dataset` | 105 976 |
+| `ngia/alpaca-data-in-wolof` | 90 865 |
+| `sudoping01/english-wolof-translation` | 81 382 |
+| `bilalfaye/english-wolof-french-dataset` | 68 197 |
+| `soynade-research/Wolof-ASR-Data` | 60 980 |
+| `cis-lmu/Glot500` | 58 335 |
+| `galsenai/wolof_corpus` | 52 705 |
+| `soynade-research/FineWeb2-HQ-50k-Wolof` | 50 692 |
+| `galsenai/wolof_tts` | 33 719 |
+| `AfriNLP/AfriNLLB-train` | 29 945 |
+| `MaroneAI/French-Wolof_Translation-Dataset` | 26 072 |
+| `MaroneAI/Wolof-to-French_Translation-Dataset` | 26 072 |
+| `yigagilbert/kallaama-trs-dataset-19hr` | 25 856 |
+| `bilalfaye/wolof-english-french` | 22 985 |
+| `galsenai/french-wolof-translation` | 16 375 |
+| `skonteye/French-Wolof-Dataset-With-Sources` | 13 890 |
+| `karim155/WolBanking77` | 9 773 |
+| `cibfaye/wolof-english-bible` | 7 883 |
+| `soynade-research/Wolof-Non-Standard-Orthography` | 6 504 |
+| `cibfaye/wolof-french-alxuraan` | 6 217 |
+| `HuggingFaceFW/fineweb-2` | 6 113 |
+| `m-a-d-i/wori-wolof-instructions` | 5 959 |
+| `yigagilbert/alffa-wolof-asr-dataset-19hr` | 5 035 |
+| `Isma/alffa_wolof` | 5 012 |
+| `Bassoumm/wolof-french-dictionary` | 4 998 |
+| `dofbi/jolof` | 4 981 |
+| `Lahad/fr_wolof_quran_corpus` | 4 199 |
+| `galsenai/english-wolof-smol-translation` | 3 614 |
+| `aiana94/polynews` | 3 331 |
+| `masakhane/InjongoIntent` | 3 195 |
+| `perrynelson/waxal-wolof` | 2 376 |
+| `HPLT/HPLT2.0_cleaned` | 2 366 |
+| `Oumar199/French_Wolof_Various_Parallel_Corpus` | 2 123 |
+| `wikimedia/wikipedia` | 1 639 |
+| `vonewman/fleurs-wolof-dataset` | 1 302 |
+| `wolof-online.com` | 1 151 |
+| `mbaye930/wolof-arabic-parallel-corpus` | 1 071 |
+| `mbaye930/WolofEntityLinking` | 1 045 |
+| `Davlan/sib200` | 699 |
+| `cis-lmu/GlotCC-V1` | 388 |
+| `alexandrainst/multi-wiki-qa` | 376 |
+| `youtube_whosper_asr` | 263 |
+| `soynade-research/Wolof-Agri-Captions` | 55 |
+
+</details>
 
 **Outils & modèles :**
 - [GlotLID](https://huggingface.co/cis-lmu/glotlid) (`cis-lmu/glotlid`) — détection de langue (`wol_Latn`)
