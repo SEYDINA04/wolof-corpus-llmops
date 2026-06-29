@@ -13,29 +13,51 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-import pandas as pd
+import pyarrow.compute as pc
+import pyarrow.parquet as pq
 
 
-def _raw_text_bytes(df: pd.DataFrame) -> int:
-    return int(df["text"].fillna("").astype(str).map(lambda s: len(s.encode("utf-8"))).sum())
+def _scan_parquet(parquet_path: str | Path) -> tuple[int, int, int]:
+    """Parcourt le parquet par batches (mémoire constante) et retourne :
+    (nb_lignes, octets_arrow_décompressés, octets_texte_brut_utf8).
+
+    On ne charge JAMAIS tout le corpus en mémoire d'un coup : le pipeline
+    tournait OOM (machine figée) en matérialisant le parquet en pandas PUIS
+    en le dupliquant via ``Dataset.from_pandas``. Ici un seul batch vit à la fois.
+    """
+    pf = pq.ParquetFile(parquet_path)
+    n = pf.metadata.num_rows
+    arrow_bytes = 0
+    raw_text_bytes = 0
+    text_idx = pf.schema_arrow.get_field_index("text")
+    for batch in pf.iter_batches(batch_size=50_000):
+        arrow_bytes += batch.nbytes
+        text_col = batch.column(text_idx)
+        s = pc.sum(pc.binary_length(text_col)).as_py()
+        raw_text_bytes += int(s) if s is not None else 0
+    return n, arrow_bytes, raw_text_bytes
 
 
 def build_readme(parquet_path: str | Path, stats: dict | None) -> str:
-    df = pd.read_parquet(parquet_path)
-    n = len(df)
     download_size = os.path.getsize(parquet_path)
-
-    # taille Arrow décompressée (dataset_size)
-    try:
-        from datasets import Dataset
-
-        num_bytes = Dataset.from_pandas(df, preserve_index=False).data.nbytes
-    except Exception:
-        num_bytes = _raw_text_bytes(df) * 2  # approximation de repli
+    n, num_bytes, raw_text_bytes = _scan_parquet(parquet_path)
 
     total_tokens = stats.get("total_tokens") if stats else None
     wolof_pct = stats.get("lid", {}).get("wolof_pct") if stats else None
     by_source = stats.get("by_source", {}) if stats else {}
+
+    if n < 1_000:
+        size_cat = "n<1K"
+    elif n < 10_000:
+        size_cat = "1K<n<10K"
+    elif n < 100_000:
+        size_cat = "10K<n<100K"
+    elif n < 1_000_000:
+        size_cat = "100K<n<1M"
+    elif n < 10_000_000:
+        size_cat = "1M<n<10M"
+    else:
+        size_cat = "10M<n<100M"
 
     front = f"""---
 dataset_info:
@@ -62,7 +84,7 @@ task_categories:
 - text-generation
 - translation
 size_categories:
-- 100K<n<1M
+- {size_cat}
 ---"""
 
     lines = [
@@ -79,7 +101,7 @@ size_categories:
     ]
     if total_tokens:
         lines.append(f"- **Tokens** (approx. whitespace) : {total_tokens:,}")
-    lines.append(f"- **Texte brut** : {_raw_text_bytes(df) / 1_000_000:.1f} MB (UTF-8)")
+    lines.append(f"- **Texte brut** : {raw_text_bytes / 1_000_000:.1f} MB (UTF-8)")
     if wolof_pct is not None:
         lines.append(f"- **Part de wolof** (GlotLID, échantillon) : {wolof_pct}%")
     lines += [
@@ -94,14 +116,17 @@ size_categories:
     ]
 
     if by_source:
+        sorted_sources = sorted(by_source.items(), key=lambda kv: -kv[1]["examples"])
         lines += [
             "## Répartition par source",
             "",
-            "| source | exemples | tokens |",
-            "|---|---:|---:|",
+            f"> {len(sorted_sources)} sources.",
+            "",
+            "| # | source | exemples | tokens |",
+            "|---:|---|---:|---:|",
         ]
-        for s, d in sorted(by_source.items(), key=lambda kv: -kv[1]["examples"]):
-            lines.append(f"| `{s}` | {d['examples']:,} | {d.get('tokens', 0):,} |")
+        for i, (s, d) in enumerate(sorted_sources, 1):
+            lines.append(f"| {i} | `{s}` | {d['examples']:,} | {d.get('tokens', 0):,} |")
         lines.append("")
 
     lines += [

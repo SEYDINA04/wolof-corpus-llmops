@@ -102,11 +102,11 @@ def stage_datacard(cfg) -> None:
 
 def stage_validate(cfg) -> qg.GateReport:
     stats = qg.load_stats(cfg.p("stats_dir") / "unified_corpus_stats.json")
-    hf_df = None
+    hf_path = None
     if cfg.gates.get("require_no_hf_loss"):
-        print("Téléchargement du parquet HF actuel (contrôle anti-perte)...")
-        hf_df = qg.fetch_hf_dataframe(cfg.hf_repo, cfg.hf_filename, cfg.hf_repo_type, cfg.hf_token)
-    report = qg.run_gates(cfg.p("unified_corpus"), cfg.gates, stats=stats, hf_df=hf_df)
+        print("Téléchargement du parquet HF actuel (contrôle anti-perte, streamé)...")
+        hf_path = qg.fetch_hf_parquet_path(cfg.hf_repo, cfg.hf_filename, cfg.hf_repo_type, cfg.hf_token)
+    report = qg.run_gates(cfg.p("unified_corpus"), cfg.gates, stats=stats, hf_parquet_path=hf_path)
     print("\n" + report.render())
     # trace JSON
     out = cfg.p("stats_dir") / "quality_gates_report.json"
@@ -132,7 +132,10 @@ def stage_publish(cfg) -> None:
     who = api.whoami()
     print(f"Authentifié : {who.get('name')}  orgs={[o['name'] for o in who.get('orgs', [])]}")
 
-    msg = f"Pipeline publish — {len(__import__('pandas').read_parquet(cfg.p('unified_corpus'))):,} exemples"
+    import pyarrow.parquet as pq
+
+    n_rows = pq.ParquetFile(cfg.p("unified_corpus")).metadata.num_rows
+    msg = f"Pipeline publish — {n_rows:,} exemples"
     print("Upload README.md...")
     api.upload_file(
         path_or_fileobj=str(cfg.p("datacard")),

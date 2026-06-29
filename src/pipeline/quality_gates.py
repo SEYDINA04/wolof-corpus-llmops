@@ -26,6 +26,9 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
+import pyarrow as pa
+import pyarrow.compute as pc
+import pyarrow.parquet as pq
 
 
 # --------------------------------------------------------------------------- #
@@ -154,20 +157,135 @@ def fetch_hf_dataframe(
         return None
 
 
+def fetch_hf_parquet_path(
+    repo: str, filename: str, repo_type: str = "dataset", token: str | None = None
+) -> str | None:
+    """Télécharge le parquet HF et renvoie son CHEMIN local (sans le charger en RAM).
+
+    Permet de streamer le contrôle anti-perte sans matérialiser un second corpus
+    complet en pandas (cause d'OOM sur les gros corpus).
+    """
+    try:
+        from huggingface_hub import hf_hub_download
+
+        return hf_hub_download(repo, filename, repo_type=repo_type, token=token)
+    except Exception:
+        return None
+
+
+def _normalized_text_array(text_col: pa.Array | pa.ChunkedArray) -> pa.Array:
+    """fillna('') -> trim espaces -> minuscule (équivalent de `_norm_keys`)."""
+    filled = pc.fill_null(pc.cast(text_col, pa.string()), "")
+    return pc.utf8_lower(pc.utf8_trim_whitespace(filled))
+
+
+def _stream_hf_keys(parquet_path: str | Path) -> set[str]:
+    """Construit l'ensemble des clés texte normalisées du parquet HF (streaming)."""
+    pf = pq.ParquetFile(parquet_path)
+    keys: set[str] = set()
+    for batch in pf.iter_batches(batch_size=50_000, columns=["text"]):
+        keys.update(_normalized_text_array(batch.column(0)).to_pylist())
+    keys.discard("")
+    return keys
+
+
 def run_gates(
-    parquet_path: str | Path, gates_cfg: dict, stats: dict | None = None, hf_df: pd.DataFrame | None = None
+    parquet_path: str | Path,
+    gates_cfg: dict,
+    stats: dict | None = None,
+    hf_df: pd.DataFrame | None = None,
+    hf_parquet_path: str | Path | None = None,
 ) -> GateReport:
-    """Exécute tous les gates configurés sur le parquet donné."""
-    df = pd.read_parquet(parquet_path)
+    """Exécute tous les gates configurés sur le parquet donné, EN STREAMING.
+
+    Un seul batch (50k lignes) vit en mémoire à la fois : on ne charge jamais le
+    corpus complet en pandas. Pour le contrôle anti-perte, fournir de préférence
+    ``hf_parquet_path`` (streamé) plutôt que ``hf_df`` (pandas, gourmand).
+    """
+    expected_cols: dict[str, str] = gates_cfg["schema"]["columns"]
+
+    pf = pq.ParquetFile(parquet_path)
+    schema = pf.schema_arrow
+    columns = list(schema.names)
+    n_total = pf.metadata.num_rows
+    text_idx = schema.get_field_index("text")
+
+    # --- passe unique en streaming : agrégats + clés normalisées ---
+    empty = 0
+    raw_bytes = 0
+    keys: set[str] = set()
+    iter_cols = [c for c in ("text", "sources") if c in columns] or None
+    for batch in pf.iter_batches(batch_size=50_000, columns=iter_cols):
+        if text_idx < 0:
+            continue
+        text_col = batch.column(batch.schema.get_field_index("text"))
+        # taille texte brut UTF-8
+        s = pc.sum(pc.binary_length(pc.cast(text_col, pa.string()))).as_py()
+        raw_bytes += int(s) if s is not None else 0
+        # textes vides (null ou blancs)
+        normed = _normalized_text_array(text_col)
+        e = pc.sum(pc.cast(pc.equal(normed, ""), pa.int64())).as_py()
+        empty += int(e) if e is not None else 0
+        # clés normalisées (doublons + anti-perte)
+        keys.update(normed.to_pylist())
+
     report = GateReport()
-    report.add(gate_schema(df, gates_cfg["schema"]["columns"]))
-    report.add(gate_min_examples(df, gates_cfg["min_examples"]))
-    report.add(gate_empty(df, gates_cfg["max_empty"]))
-    report.add(gate_duplicates(df, gates_cfg["max_duplicate_pct"]))
-    report.add(gate_raw_text_size(df, gates_cfg["min_raw_text_mb"]))
+
+    # --- schema ---
+    ok = all(c in columns for c in expected_cols)
+    detail = ""
+    if ok and "sources" in expected_cols:
+        t = schema.field("sources").type
+        if not (pa.types.is_list(t) or pa.types.is_large_list(t)):
+            ok = False
+            detail = "colonne 'sources' n'est pas une liste"
+    report.add(GateResult("schema", ok, list(expected_cols.keys()), columns, detail))
+
+    # --- min_examples ---
+    minimum = gates_cfg["min_examples"]
+    report.add(GateResult("min_examples", n_total >= minimum, f">={minimum:,}", f"{n_total:,}"))
+
+    # --- empty_texts ---
+    max_empty = gates_cfg["max_empty"]
+    report.add(GateResult("empty_texts", empty <= max_empty, f"<={max_empty}", empty))
+
+    # --- duplicates ---
+    max_pct = gates_cfg["max_duplicate_pct"]
+    dup = n_total - len(keys)
+    pct = round(100 * dup / n_total, 4) if n_total else 0.0
+    report.add(GateResult("duplicates", pct <= max_pct, f"<={max_pct}%", f"{pct}% ({dup:,})"))
+
+    # --- raw_text_size ---
+    min_mb = gates_cfg["min_raw_text_mb"]
+    mb = round(raw_bytes / 1_000_000, 2)
+    report.add(GateResult("raw_text_size", mb >= min_mb, f">={min_mb} MB", f"{mb} MB"))
+
+    # --- wolof_pct ---
     report.add(gate_wolof_pct(stats, gates_cfg["min_wolof_pct"]))
+
+    # --- no_hf_loss ---
     if gates_cfg.get("require_no_hf_loss", False):
-        report.add(gate_no_hf_loss(df, hf_df))
+        hf_keys: set[str] | None = None
+        if hf_parquet_path is not None:
+            hf_keys = _stream_hf_keys(hf_parquet_path)
+        elif hf_df is not None:
+            hf_keys = set(_norm_keys(hf_df["text"]))
+            hf_keys.discard("")
+        if hf_keys is None:
+            report.add(GateResult("no_hf_loss", True, "0 perte", "skip", "HF non accessible (skip)"))
+        else:
+            new_keys = keys - {""}
+            missing = hf_keys - new_keys
+            n_new = len(new_keys - hf_keys)
+            report.add(
+                GateResult(
+                    "no_hf_loss",
+                    len(missing) == 0,
+                    "0 perte",
+                    f"{len(missing)} perdus",
+                    f"+{n_new:,} nouveaux",
+                )
+            )
     return report
 
 
