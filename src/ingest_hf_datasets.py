@@ -62,6 +62,12 @@ DATASETS = [
     {"repo": "cis-lmu/GlotCC-V1", "cols": ["content"], "config": "wol-Latn", "split": "train"},
     {"repo": "aiana94/polynews", "cols": ["text"], "config": "wol_Latn", "split": "train"},
     {"repo": "Davlan/sib200", "cols": ["text"], "config": "wol_Latn", "split": "train"},
+    # --- encyclopédique / religieux / parallèle (lot 250 MB) ---
+    {"repo": "wikimedia/wikipedia", "cols": ["text"], "config": "20231101.wo", "split": "train"},
+    {"repo": "alexandrainst/multi-wiki-qa", "cols": ["context"], "config": "wo", "split": "train"},
+    {"repo": "Lahad/fr_wolof_quran_corpus", "cols": ["texte_wolof"], "split": "train"},
+    {"repo": "dofbi/jolof", "cols": ["wolof"], "split": "train"},
+    {"repo": "AfriNLP/AfriNLLB-train", "cols": ["source", "target"], "split": "train"},
 ]
 
 
