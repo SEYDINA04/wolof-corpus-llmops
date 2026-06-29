@@ -68,6 +68,10 @@ DATASETS = [
     {"repo": "Lahad/fr_wolof_quran_corpus", "cols": ["texte_wolof"], "split": "train"},
     {"repo": "dofbi/jolof", "cols": ["wolof"], "split": "train"},
     {"repo": "AfriNLP/AfriNLLB-train", "cols": ["source", "target"], "split": "train"},
+    # --- gros volumes (objectif 1M) ---
+    {"repo": "michsethowusu/wolof-emotions-corpus", "cols": ["Wolof"], "split": "train"},
+    {"repo": "geekdiop/A-Wolof-Arabic-Parallel-Corpus", "cols": ["text"], "split": "train"},
+    {"repo": "michsethowusu/Code-170k-wolof", "cols": ["conversations"], "split": "train"},  # ShareGPT: tours wolof
 ]
 
 
@@ -110,6 +114,25 @@ def norm_text(value) -> str:
         except Exception:
             pass
     return str(value).strip()
+
+
+def extract_texts(value) -> list[str]:
+    """Extrait un ou plusieurs textes d'une cellule.
+
+    - chaîne simple -> [texte]
+    - conversations (liste de {"from", "value"}) -> [value, value, ...]
+      (format ShareGPT, ex. michsethowusu/Code-170k-wolof)
+    """
+    if isinstance(value, list):
+        out = []
+        for turn in value:
+            if isinstance(turn, dict):
+                out.append(norm_text(turn.get("value", "")))
+            else:
+                out.append(norm_text(turn))
+        return [t for t in out if t]
+    t = norm_text(value)
+    return [t] if t else []
 
 
 def ingest_one(cfg: dict, model, lid_threshold: float, min_tokens: int):
@@ -162,29 +185,27 @@ def ingest_one(cfg: dict, model, lid_threshold: float, min_tokens: int):
 
     for row in tqdm(ds, total=ds.num_rows, desc=f"  {safe_name(repo)}"):
         for c in use_cols:
-            text = norm_text(row.get(c))
-            if not text:
-                continue
-            stats["candidates"] += 1
+            for text in extract_texts(row.get(c)):
+                stats["candidates"] += 1
 
-            if len(text.split()) < eff_min_tokens:
-                stats["rejected_short"] += 1
-                continue
-
-            if eff_model is not None:
-                label, conf = predict_lang(eff_model, text)
-                stats["lang_counts"][label] = stats["lang_counts"].get(label, 0) + 1
-                if label != WOLOF_LABEL or conf < lid_threshold:
-                    stats["rejected_lang"] += 1
+                if len(text.split()) < eff_min_tokens:
+                    stats["rejected_short"] += 1
                     continue
 
-            key = text.lower()
-            if key in seen:
-                stats["rejected_dup"] += 1
-                continue
-            seen.add(key)
+                if eff_model is not None:
+                    label, conf = predict_lang(eff_model, text)
+                    stats["lang_counts"][label] = stats["lang_counts"].get(label, 0) + 1
+                    if label != WOLOF_LABEL or conf < lid_threshold:
+                        stats["rejected_lang"] += 1
+                        continue
 
-            kept_items.append({"text": text, "sources": [repo]})
+                key = text.lower()
+                if key in seen:
+                    stats["rejected_dup"] += 1
+                    continue
+                seen.add(key)
+
+                kept_items.append({"text": text, "sources": [repo]})
 
     stats["kept"] = len(kept_items)
 

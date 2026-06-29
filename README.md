@@ -6,7 +6,7 @@
 [![Ruff](https://img.shields.io/badge/lint-ruff-D7FF64?logo=ruff&logoColor=black)](https://github.com/astral-sh/ruff)
 [![Tests](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)](https://docs.pytest.org/)
 [![HF Dataset](https://img.shields.io/badge/🤗%20Dataset-galsenai%2Fwolof__centalized__corpus-FFD21E)](https://huggingface.co/datasets/galsenai/wolof_centalized_corpus)
-[![Examples](https://img.shields.io/badge/examples-606%2C456-success)](https://huggingface.co/datasets/galsenai/wolof_centalized_corpus)
+[![Examples](https://img.shields.io/badge/examples-1%2C018%2C520-success)](https://huggingface.co/datasets/galsenai/wolof_centalized_corpus)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Pipeline **LLMOps** de construction, validation et publication d'un corpus
@@ -23,17 +23,17 @@ unique et versionné sur HuggingFace :
 
 | Indicateur | Valeur |
 |---|---|
-| Exemples | **606 456** |
-| Tokens (whitespace) | **20.6 M** |
-| Texte brut (UTF-8) | **107.7 MB** |
-| Part de wolof (GlotLID) | **95.2 %** |
-| Sources agrégées | **33** |
-| Exemples multi-sources | 133 601 |
+| Exemples | **1 018 520** |
+| Tokens (whitespace) | **72.5 M** |
+| Texte brut (UTF-8) | **443.7 MB** |
+| Part de wolof (GlotLID) | **97.1 %** |
+| Sources agrégées | **47** |
+| Exemples multi-sources | 271 174 |
 | Format | Parquet · `text` (string) + `sources` (list[string]) |
 
-> Construit en fusionnant le corpus central existant (304 762 ex.) avec
-> **17 nouveaux datasets HF** (424 119 ex.), déduplication exacte appliquée
-> (+313 477 exemples nets, 0 donnée existante perdue).
+> Corpus franchissant le **million d'exemples** sans doublon exact, agrégeant
+> 47 sources (HF + scraping web + ASR). Déduplication exacte appliquée,
+> 0 donnée existante perdue (quality gate anti-régression).
 
 ---
 
@@ -80,24 +80,26 @@ Aucune publication si un seul échoue (config dans `src/pipeline.yaml`) :
 
 ## 📚 Ressources & sources de données
 
-**Datasets HF ingérés (28)** — déclarés dans `src/pipeline.yaml` :
+**Datasets HF ingérés (31)** — déclarés dans `src/pipeline.yaml` :
 
 | Catégorie | Sources |
 |---|---|
 | Texte natif / web | `soynade-research/FineWeb2-HQ-50k-Wolof`, `soynade-research/Wolof-Non-Standard-Orthography` |
-| Traductions | `ZigZeug/Baatukaay-wolof-translated-dataset`, `bilalfaye/english-wolof-french-dataset`, `bilalfaye/wolof-english-french`, `Bassoumm/wolof-french-dictionary`, `skonteye/French-Wolof-Dataset-With-Sources`, `galsenai/english-wolof-smol-translation`, `MaroneAI/French-Wolof_Translation-Dataset`, `MaroneAI/Wolof-to-French_Translation-Dataset`, `mbaye930/wolof-arabic-parallel-corpus` |
-| ASR / divers | `soynade-research/Wolof-Agri-Captions`, `vonewman/fleurs-wolof-dataset`, `michsethowusu/wolof-sentiments-corpus`, `mbaye930/WolofEntityLinking` |
-| Instructions LLM | `m-a-d-i/wori-wolof-instructions`, `ngia/alpaca-data-in-wolof` |
+| Traductions | `ZigZeug/Baatukaay-wolof-translated-dataset`, `bilalfaye/english-wolof-french-dataset`, `bilalfaye/wolof-english-french`, `Bassoumm/wolof-french-dictionary`, `skonteye/French-Wolof-Dataset-With-Sources`, `galsenai/english-wolof-smol-translation`, `MaroneAI/French-Wolof_Translation-Dataset`, `MaroneAI/Wolof-to-French_Translation-Dataset`, `mbaye930/wolof-arabic-parallel-corpus`, `geekdiop/A-Wolof-Arabic-Parallel-Corpus` |
+| ASR / divers | `soynade-research/Wolof-Agri-Captions`, `vonewman/fleurs-wolof-dataset`, `michsethowusu/wolof-sentiments-corpus`, `michsethowusu/wolof-emotions-corpus`, `mbaye930/WolofEntityLinking` |
+| Instructions / code LLM | `m-a-d-i/wori-wolof-instructions`, `ngia/alpaca-data-in-wolof`, `michsethowusu/Code-170k-wolof` |
 | Web / encyclo / parallèle | `HPLT/HPLT2.0_cleaned`, `cis-lmu/Glot500`, `HuggingFaceFW/fineweb-2`, `cis-lmu/GlotCC-V1`, `aiana94/polynews`, `Davlan/sib200`, `wikimedia/wikipedia`, `alexandrainst/multi-wiki-qa`, `Lahad/fr_wolof_quran_corpus`, `dofbi/jolof`, `AfriNLP/AfriNLLB-train` |
 
-### Répartition par source (corpus unifié — 674 282 ex.)
+### Répartition par source (corpus unifié — 1 018 520 ex.)
 
-> Sources cumulées (33 fusionnées avec le central historique). Régénéré à chaque fusion.
+> 47 sources cumulées (fusionnées avec le central historique). Régénéré à chaque fusion.
 
-<details><summary>Voir les 44 sources</summary>
+<details><summary>Voir les 47 sources</summary>
 
 | source | exemples |
 |---|---:|
+| `michsethowusu/Code-170k-wolof` | 344 137 |
+| `michsethowusu/wolof-emotions-corpus` | 130 730 |
 | `michsethowusu/wolof-sentiments-corpus` | 130 730 |
 | `ZigZeug/Baatukaay-wolof-translated-dataset` | 105 976 |
 | `ngia/alpaca-data-in-wolof` | 90 865 |
@@ -134,6 +136,7 @@ Aucune publication si un seul échoue (config dans `src/pipeline.yaml`) :
 | `Oumar199/French_Wolof_Various_Parallel_Corpus` | 2 123 |
 | `wikimedia/wikipedia` | 1 639 |
 | `vonewman/fleurs-wolof-dataset` | 1 302 |
+| `geekdiop/A-Wolof-Arabic-Parallel-Corpus` | 1 259 |
 | `wolof-online.com` | 1 151 |
 | `mbaye930/wolof-arabic-parallel-corpus` | 1 071 |
 | `mbaye930/WolofEntityLinking` | 1 045 |

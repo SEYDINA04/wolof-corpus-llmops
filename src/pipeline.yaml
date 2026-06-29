@@ -55,6 +55,10 @@ ingest:
     - { repo: Lahad/fr_wolof_quran_corpus, cols: [texte_wolof],                      split: train }
     - { repo: dofbi/jolof,                cols: [wolof],                             split: train }
     - { repo: AfriNLP/AfriNLLB-train,     cols: [source, target],                    split: train }
+    # --- gros volumes (objectif 1M) ---
+    - { repo: michsethowusu/wolof-emotions-corpus, cols: [Wolof],                     split: train }
+    - { repo: geekdiop/A-Wolof-Arabic-Parallel-Corpus, cols: [text],                  split: train }
+    - { repo: michsethowusu/Code-170k-wolof,       cols: [conversations],             split: train }  # ShareGPT: tours wolof
 
 # --- Étape 4 : Statistiques -----------------------------------------------
 stats:
